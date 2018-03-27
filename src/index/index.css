@@ -37,10 +37,10 @@
         p{ff @ft  ;c #bdbdbd  ;p 10px  ;lh 22px  ;}
     }
     .mr0{mr 0  ;}
-    .serv-ico1{dib;bg url(images/ico/s-ico1.png)  ;}
-    .serv-ico2{dib;bg url(images/ico/s-ico2.png)  ;}
-    .serv-ico3{dib;bg url(images/ico/s-ico3.png)  ;}
-    .serv-ico4{dib;bg url(images/ico/s-ico4.png)  ;}
+    .serv-ico1{dib;bg url(images/ico/s-ico1.png?__bg)  ;}
+    .serv-ico2{dib;bg url(images/ico/s-ico2.png?__bg)  ;}
+    .serv-ico3{dib;bg url(images/ico/s-ico3.png?__bg)  ;}
+    .serv-ico4{dib;bg url(images/ico/s-ico4.png?__bg)  ;}
 }
 /*———————————— 意合动态 && 发展历史 ————————————*/
 #dynamic,#history{
@@ -54,9 +54,9 @@
         &{pr;mb 20px  ;cp;}
         time{pa;w 128px  ;l -71px  ;t 24px  ;lh 23px  ;db;}
         time i{db;w 23px  ;h 23px  ;fr;mr 26px  ;}
-        time i.show{bg url(images/ico/show-ico.png)  ;}
-        time i.hide{bg url(images/ico/hide-ico.png)  ;}
-        time ins{bg url(images/ico/arrow-ico.png)  ;w 18px  ;h 21px  ;db;fr;mt 1px  ;}
+        time i.show{bg url(images/ico/show-ico.png?__bg)  ;}
+        time i.hide{bg url(images/ico/hide-ico.png?__bg)  ;}
+        time ins{bg url(images/ico/arrow-ico.png?__bg)  ;w 18px  ;h 21px  ;db;fr;mt 1px  ;}
         div{
             &{ml 57px  ;p 28px 32px  ;bg #5c5c5c  ;f 14px  ;brs 9px  ;}
             h4{c #f8f8f8  ;ff @ft  ;}

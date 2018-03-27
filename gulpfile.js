@@ -56,12 +56,6 @@ gulp.task('getImg', function() {
 });
 
 
-//清除dest文件夹
-gulp.task('cleandest', function() {
-    return del(['./dest']);
-});
-
-
 //合并完整的less
 gulp.task('getEndLess', function() {
     myCss([['./src/common/common.css','./src/common/common.less'], ['./src/index/index.css','./src/index/index.less']]);
@@ -79,7 +73,9 @@ gulp.task('getCss', ['getEndLess'], function() {
 
 
 // 构建出dest
-gulp.task('build', ['getImg','html', 'getJs', 'getCss']);
+gulp.task('build', ['getImg','html', 'getJs', 'getCss'],function(){
+    del(['dist']);
+});
 
 
 gulp.task('serve', ['build'], function() {
@@ -102,37 +98,89 @@ var uglify = require('gulp-uglify');
 /* 压缩html */
 gulp.task('minhtml', function() {
     gulp.src(['./dest/**/*.html'])
-		.pipe(htmlmin({
-			removeComments: false,//清除HTML注释
-			collapseWhitespace: true,//压缩HTML
-			collapseBooleanAttributes: true,//省略布尔属性的值 <input checked="true"/> ==> <input />
-			removeEmptyAttributes: true,//删除所有空格作属性值 <input id="" /> ==> <input />
-			removeScriptTypeAttributes: true,//删除<script>的type="text/javascript"
-			removeStyleLinkTypeAttributes: true,//删除<style>和<link>的type="text/css"
-			minifyJS: true,//压缩页面JS
-			minifyCSS: true//压缩页面CSS
-		}))
-        .pipe(gulp.dest('./dest'));
+        .pipe(htmlmin({
+            removeComments: false,//清除HTML注释
+            collapseWhitespace: true,//压缩HTML
+            collapseBooleanAttributes: true,//省略布尔属性的值 <input checked="true"/> ==> <input />
+            removeEmptyAttributes: true,//删除所有空格作属性值 <input id="" /> ==> <input />
+            removeScriptTypeAttributes: true,//删除<script>的type="text/javascript"
+            removeStyleLinkTypeAttributes: true,//删除<style>和<link>的type="text/css"
+            minifyJS: true,//压缩页面JS
+            minifyCSS: true//压缩页面CSS
+        }))
+        .pipe(gulp.dest('./dest2'));
 });
 
 /* 压缩css */
 gulp.task('mincss', function() {
     gulp.src(['./dest/**/*.css'])
-		.pipe(cssmin({compatibility:'ie7'})) //兼容IE7及以下需设置compatibility属性 .pipe(cssmin({compatibility: 'ie7'
-        .pipe(gulp.dest('./dest'));
+        .pipe(cssmin({compatibility:'ie7'})) //兼容IE7及以下需设置compatibility属性 .pipe(cssmin({compatibility: 'ie7'
+        .pipe(gulp.dest('./dest2'));
 });
 
 /* 压缩js */
 gulp.task('minjs', function() {
     gulp.src(['./dest/**/*.js'])
-		//.pipe(uglify())
-        .pipe(gulp.dest('./dest'));
+        .pipe(uglify())
+        .pipe(gulp.dest('./dest2'));
 });
 
-/* 清除dest文件夹 */
-gulp.task('cleandest',function(cb){
-	return del(['dest']);
+/* 拷贝images文件夹 */
+gulp.task('copyimg',function(){
+    gulp.src('./dest/images/**/*')
+        .pipe(gulp.dest('./dest2/images'));
+    gulp.src('./dest/style/images/**/*')
+        .pipe(gulp.dest('./dest2/style/images'));
 });
+
 
 /* 压缩项目文件 */
-gulp.task('min',["minhtml","mincss","minjs"]);
+gulp.task('min',["copyimg","minhtml","mincss","minjs"]);
+
+
+/* ----------------------------------------------- 阶段三(背景图合并) ----------------------------------*/
+var spriter = require('gulp-css-spriter');//背景图合并——spriter
+
+//背景图合并
+gulp.task('spriter',['copySource'],function(){
+    
+    gulp.src('./dest2/style/common.css')
+        .pipe(spriter({
+            'spriteSheet':'./dist/style/images/'+'common_ico.png',
+            'pathToSpriteSheetFromCSS':'images/'+'common_ico.png',
+        }))
+        .pipe(cssmin({compatibility:'ie7'}))
+        .pipe(gulp.dest('./dist/style'));
+    
+    gulp.src('./dest2/style/index.css')
+        .pipe(spriter({
+            'spriteSheet':'./dist/style/images/'+'index_ico.png',
+            'pathToSpriteSheetFromCSS':'images/'+'index_ico.png',
+        }))
+        .pipe(cssmin({compatibility:'ie7'}))
+        .pipe(gulp.dest('./dist/style'));
+        
+    gulp.src('./dest2/style/page.css')
+        .pipe(spriter({
+            'spriteSheet':'./dist/style/images/'+'page_ico.png',
+            'pathToSpriteSheetFromCSS':'images/'+'page_ico.png',
+        }))
+        .pipe(cssmin({compatibility:'ie7'}))
+        .pipe(gulp.dest('./dist/style'));
+});
+
+
+//复制源码
+gulp.task('copySource',function(){
+    return gulp.src('./dest2/**/*')
+        .pipe(gulp.dest('dist'));
+});
+
+
+//删除合并前的背景图
+gulp.task('merge',['spriter'],function(){
+    del(['dist/style/images/ico']);
+    setTimeout(function(){
+        del(['dest','dest2']);
+    },5000);
+});

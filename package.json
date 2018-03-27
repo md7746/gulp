@@ -9,6 +9,7 @@
     "browser-sync": "^2.23.6",
     "del": "^2.2.2",
     "gulp": "^3.9.1",
+    "gulp-css-spriter": "^0.4.0",
     "gulp-ejs": "^3.0.1",
     "gulp-flatten": "^0.3.1",
     "gulp-htmlmin": "^4.0.0",
