@@ -37,7 +37,7 @@ gulp.task('html', function() {
 
 //合并js,获得js
 gulp.task('getJs', function() {
-    gulp.src(['./src/common/common.js','./src/index/index.js'])
+    gulp.src(['./libs/*.js','./src/static/config.js','./src/index/index.js'])
         .pipe(gulp.dest('./dest/js'));
 
 });
