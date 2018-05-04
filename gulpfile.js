@@ -1,9 +1,56 @@
 var fs = require("fs");
+
+
+//node.js
+let join = require('path').join;
+
+let cssPath = []; //接收css文件路径
+let cssFilename = []; //接收css文件名
+let lessPath = []; //接收less文件路径
+let jsPath = []; //接收javascript文件路径
+
+function findSync(startPath) {
+    let result = [];
+
+    function finder(path) {
+        let files = fs.readdirSync(path);
+        files.forEach((val, index) => {
+            let fPath = join(path, val);
+            let stats = fs.statSync(fPath);
+            if (stats.isDirectory()) finder(fPath);
+            if (stats.isFile()) result.push(fPath);
+        });
+
+    }
+    finder(startPath);
+    return result.map(function(item) {
+        return './' + item.replace(/\\/g, '/');
+    });;
+}
+
+cssPath = findSync('./src').filter(function(item) {
+    return item.indexOf('css') !== -1;
+});
+
+cssPath.map((item) => {
+    var a = item.split('/');
+    cssFilename.push(a[a.length - 1].split('.')[0]);
+})
+lessPath = cssFilename.map((item) => {
+    return './src/less/' + item + '.less';
+});
+jsPath = cssPath.filter(function(item) {
+    return item.indexOf('common.css') == -1;
+}).map((item) => {
+    return item.replace(/.css/, '.js');
+});
+
+// console.log(cssPath, cssFilename, lessPath, jsPath);
 /* ----------------------------------------------- 阶段一(页面制作) ----------------------------------*/
 //我自己的css简写规则
-function myCss(myLess) {
-    for (var i = 0; i < myLess.length; i++) {
-        var beforeLess = fs.readFileSync(myLess[i][0]);
+function myCss(files) {
+    for (var i = 0; i < files.length; i++) {
+        var beforeLess = fs.readFileSync(files[i]);
 
         beforeLess = String(beforeLess).replace(/\s([@a-zA-Z0-9%\s#,\)\(\?_:/.-]*)\s\s;/g, "($1);")
             .replace(/{([a-z)]*)\(/g, "{.$1(")
@@ -12,7 +59,7 @@ function myCss(myLess) {
             .replace(/;([a-z0-9]+);/g, ";.$1();")
             .replace(/{([a-z0-9]+);/g, "{.$1();");
 
-        fs.writeFile(myLess[i][1], beforeLess, function(err) {
+        fs.writeFile('./src/less/' + cssFilename[i] + '.less', beforeLess, function(err) {
             if (err) {
                 return console.error(err);
             }
@@ -23,9 +70,9 @@ function myCss(myLess) {
 var gulp = require('gulp');
 var ejs = require('gulp-ejs');
 var del = require('del');
-var flatten = require('gulp-flatten');//dest目标不保持目录
+var flatten = require('gulp-flatten'); //dest目标不保持目录
 var less = require('gulp-less');
-var browserSync = require('browser-sync').create();//本地服务
+var browserSync = require('browser-sync').create(); //本地服务
 
 //编译ejs
 gulp.task('html', function() {
@@ -37,7 +84,7 @@ gulp.task('html', function() {
 
 //合并js,获得js
 gulp.task('getJs', function() {
-    gulp.src(['./libs/*.js','./src/static/config.js','./src/index/index.js'])
+    gulp.src(['./libs/*.js', './src/static/config.js', ...jsPath])
         .pipe(gulp.dest('./dest/js'));
 
 });
@@ -58,22 +105,31 @@ gulp.task('getImg', function() {
 
 //合并完整的less
 gulp.task('getEndLess', function() {
-    myCss([['./src/common/common.css','./src/common/common.less'], ['./src/index/index.css','./src/index/index.less']]);
+    myCss(cssPath);
 });
 
 //编译less,获得css
 gulp.task('getCss', ['getEndLess'], function() {
 
-        gulp.src(['./src/common/common.less', './src/index/index.less'])
-            .pipe(less())
-            .pipe(flatten())
-            .pipe(gulp.dest('./dest/style'));
+    gulp.src(lessPath)
+        .pipe(less())
+        .pipe(flatten())
+        .pipe(gulp.dest('./dest/style'));
+
+});
+
+//css第三方依赖
+gulp.task('getLibsCss', function() {
+
+    gulp.src('.src/libs/*.css')
+        .pipe(flatten())
+        .pipe(gulp.dest('./dest/style'));
 
 });
 
 
 // 构建出dest
-gulp.task('build', ['getImg','html', 'getJs', 'getCss'],function(){
+gulp.task('build', ['getImg', 'html', 'getJs', 'getCss','getLibsCss'], function() {
     del(['dist']);
 });
 
@@ -87,7 +143,7 @@ gulp.task('serve', ['build'], function() {
     gulp.watch('src/**/*.js', ['getJs', 'html']);
     gulp.watch('src/**/*.html', ['html']);
     gulp.watch('src/**/*.css', ['getCss', 'getImg', 'html']);
-    gulp.watch("dest/*.html").on('change', browserSync.reload);
+    gulp.watch("dest/*").on('change', browserSync.reload);
 });
 
 /* ----------------------------------------------- 阶段二(压缩合并) ----------------------------------*/
@@ -99,14 +155,14 @@ var uglify = require('gulp-uglify');
 gulp.task('minhtml', function() {
     gulp.src(['./dest/**/*.html'])
         .pipe(htmlmin({
-            removeComments: false,//清除HTML注释
-            collapseWhitespace: true,//压缩HTML
-            collapseBooleanAttributes: true,//省略布尔属性的值 <input checked="true"/> ==> <input />
-            removeEmptyAttributes: true,//删除所有空格作属性值 <input id="" /> ==> <input />
-            removeScriptTypeAttributes: true,//删除<script>的type="text/javascript"
-            removeStyleLinkTypeAttributes: true,//删除<style>和<link>的type="text/css"
-            minifyJS: true,//压缩页面JS
-            minifyCSS: true//压缩页面CSS
+            removeComments: false, //清除HTML注释
+            collapseWhitespace: true, //压缩HTML
+            collapseBooleanAttributes: true, //省略布尔属性的值 <input checked="true"/> ==> <input />
+            removeEmptyAttributes: true, //删除所有空格作属性值 <input id="" /> ==> <input />
+            removeScriptTypeAttributes: true, //删除<script>的type="text/javascript"
+            removeStyleLinkTypeAttributes: true, //删除<style>和<link>的type="text/css"
+            minifyJS: true, //压缩页面JS
+            minifyCSS: true //压缩页面CSS
         }))
         .pipe(gulp.dest('./dest2'));
 });
@@ -114,7 +170,7 @@ gulp.task('minhtml', function() {
 /* 压缩css */
 gulp.task('mincss', function() {
     gulp.src(['./dest/**/*.css'])
-        .pipe(cssmin({compatibility:'ie7'})) //兼容IE7及以下需设置compatibility属性 .pipe(cssmin({compatibility: 'ie7'
+        .pipe(cssmin({ compatibility: 'ie7' })) //兼容IE7及以下需设置compatibility属性 .pipe(cssmin({compatibility: 'ie7'
         .pipe(gulp.dest('./dest2'));
 });
 
@@ -126,7 +182,7 @@ gulp.task('minjs', function() {
 });
 
 /* 拷贝images文件夹 */
-gulp.task('copyimg',function(){
+gulp.task('copyimg', function() {
     gulp.src('./dest/images/**/*')
         .pipe(gulp.dest('./dest2/images'));
     gulp.src('./dest/style/images/**/*')
@@ -135,52 +191,52 @@ gulp.task('copyimg',function(){
 
 
 /* 压缩项目文件 */
-gulp.task('min',["copyimg","minhtml","mincss","minjs"]);
+gulp.task('min', ["copyimg", "minhtml", "mincss", "minjs"]);
 
 
 /* ----------------------------------------------- 阶段三(背景图合并) ----------------------------------*/
-var spriter = require('gulp-css-spriter');//背景图合并——spriter
+var spriter = require('gulp-css-spriter'); //背景图合并——spriter
 
 //背景图合并
-gulp.task('spriter',['copySource'],function(){
-    
+gulp.task('spriter', ['copySource'], function() {
+
     gulp.src('./dest2/style/common.css')
         .pipe(spriter({
-            'spriteSheet':'./dist/style/images/'+'common_ico.png',
-            'pathToSpriteSheetFromCSS':'images/'+'common_ico.png',
+            'spriteSheet': './dist/style/images/' + 'common_ico.png',
+            'pathToSpriteSheetFromCSS': 'images/' + 'common_ico.png',
         }))
-        .pipe(cssmin({compatibility:'ie7'}))
+        .pipe(cssmin({ compatibility: 'ie7' }))
         .pipe(gulp.dest('./dist/style'));
-    
+
     gulp.src('./dest2/style/index.css')
         .pipe(spriter({
-            'spriteSheet':'./dist/style/images/'+'index_ico.png',
-            'pathToSpriteSheetFromCSS':'images/'+'index_ico.png',
+            'spriteSheet': './dist/style/images/' + 'index_ico.png',
+            'pathToSpriteSheetFromCSS': 'images/' + 'index_ico.png',
         }))
-        .pipe(cssmin({compatibility:'ie7'}))
+        .pipe(cssmin({ compatibility: 'ie7' }))
         .pipe(gulp.dest('./dist/style'));
-        
+
     gulp.src('./dest2/style/page.css')
         .pipe(spriter({
-            'spriteSheet':'./dist/style/images/'+'page_ico.png',
-            'pathToSpriteSheetFromCSS':'images/'+'page_ico.png',
+            'spriteSheet': './dist/style/images/' + 'page_ico.png',
+            'pathToSpriteSheetFromCSS': 'images/' + 'page_ico.png',
         }))
-        .pipe(cssmin({compatibility:'ie7'}))
+        .pipe(cssmin({ compatibility: 'ie7' }))
         .pipe(gulp.dest('./dist/style'));
 });
 
 
 //复制源码
-gulp.task('copySource',function(){
+gulp.task('copySource', function() {
     return gulp.src('./dest2/**/*')
         .pipe(gulp.dest('dist'));
 });
 
 
 //删除合并前的背景图
-gulp.task('merge',['spriter'],function(){
+gulp.task('merge', ['spriter'], function() {
     del(['dist/style/images/ico']);
-    setTimeout(function(){
-        del(['dest','dest2']);
-    },5000);
+    setTimeout(function() {
+        del(['dest', 'dest2']);
+    }, 5000);
 });
