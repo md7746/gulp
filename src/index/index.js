@@ -1,4 +1,4 @@
-require(["jquery",'domReady','slide'], function($) {
+require(["jquery",'domReady'], function($) {
     $(function(){
         
     })

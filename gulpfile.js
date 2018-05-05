@@ -121,7 +121,7 @@ gulp.task('getCss', ['getEndLess'], function() {
 //css第三方依赖
 gulp.task('getLibsCss', function() {
 
-    gulp.src('.src/libs/*.css')
+    gulp.src('./libs/*.css')
         .pipe(flatten())
         .pipe(gulp.dest('./dest/style'));
 
