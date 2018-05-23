@@ -143,7 +143,9 @@ gulp.task('serve', ['build'], function() {
     gulp.watch('src/**/*.js', ['getJs', 'html']);
     gulp.watch('src/**/*.html', ['html']);
     gulp.watch('src/**/*.css', ['getCss', 'getImg', 'html']);
-    gulp.watch("dest/*").on('change', browserSync.reload);
+    setTimeout(()=>{
+        gulp.watch("dest/*").on('change', browserSync.reload);
+    },1000)
 });
 
 /* ----------------------------------------------- 阶段二(压缩合并) ----------------------------------*/
