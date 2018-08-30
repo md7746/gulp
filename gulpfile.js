@@ -128,8 +128,18 @@ gulp.task('getLibsCss', function() {
 });
 
 
+//css第三方依赖
+gulp.task('getFonts', function() {
+
+    gulp.src('./src/static/fonts/*')
+        .pipe(flatten())
+        .pipe(gulp.dest('./dest/fonts'));
+
+});
+
+
 // 构建出dest
-gulp.task('build', ['getImg', 'html', 'getJs', 'getCss','getLibsCss'], function() {
+gulp.task('build', ['getImg', 'html', 'getJs', 'getCss','getFonts'], function() {
     del(['dist']);
 });
 
