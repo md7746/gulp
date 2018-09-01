@@ -39,12 +39,10 @@ cssPath.map((item) => {
 lessPath = cssFilename.map((item) => {
     return './src/less/' + item + '.less';
 });
-jsPath = cssPath.filter(function(item) {
-    return item.indexOf('common.css') == -1;
-}).map((item) => {
+jsPath = cssPath.map((item) => {
     return item.replace(/.css/, '.js');
 });
-
+console.log(jsPath)
 // console.log(cssPath, cssFilename, lessPath, jsPath);
 /* ----------------------------------------------- 阶段一(页面制作) ----------------------------------*/
 //我自己的css简写规则
@@ -53,11 +51,11 @@ function myCss(files) {
         var beforeLess = fs.readFileSync(files[i]);
 
         beforeLess = String(beforeLess).replace(/\s([@a-zA-Z0-9%\s#,\)\(\?_:/.-]*)\s\s;/g, "($1);")
-            .replace(/{([a-z)]*)\(/g, "{.$1(")
-            .replace(/;([a-z)]*)\(/g, ";.$1(")
-            .replace(/;([a-z]+);/g, ";.$1();")
-            .replace(/;([a-z0-9]+);/g, ";.$1();")
-            .replace(/{([a-z0-9]+);/g, "{.$1();");
+            .replace(/{([a-z)-]*)\(/g, "{.$1(")
+            .replace(/;([a-z)-]*)\(/g, ";.$1(")
+            .replace(/;([a-z-]+);/g, ";.$1();")
+            .replace(/;([a-z0-9-]+);/g, ";.$1();")
+            .replace(/{([a-z0-9-]+);/g, "{.$1();");
 
         fs.writeFile('./src/less/' + cssFilename[i] + '.less', beforeLess, function(err) {
             if (err) {
@@ -84,7 +82,7 @@ gulp.task('html', function() {
 
 //合并js,获得js
 gulp.task('getJs', function() {
-    gulp.src(['./libs/*.js', './src/static/config.js', ...jsPath])
+    gulp.src(['./libs/**/*.js', './src/static/config.js', ...jsPath])
         .pipe(gulp.dest('./dest/js'));
 
 });
